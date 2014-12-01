@@ -1,0 +1,28 @@
+# Distributed tile processing w/ GeoTrellis and spark.
+
+# Describe the challenges
+ - Describe the climate data set
+ - Describe the OTM data sets
+
+# Describe the technologies
+ - GeoTrellis: a scala library for doing anything geospatial
+ - Spark: Cluster computing
+
+# How we store tiles
+ - Distributed Data Stores: Accumulo and HDFS
+
+# Ingesting tiles
+ - Describe the process. Show what it looks like.
+ - Example: ingesting the housing vacancy raster.
+   - Tile using GDAL gdal_retile.py
+   - Upload to S3 in chunks of GeoTIFFS
+   - Reproject the tiles
+   - Combine the tiles per key
+
+# Serving tiles
+  - Describe challenge of filtering spatiall
+
+# Temporal component
+  - Time series rasters produce an additional challenge
+  - Band rasters as well.
+
