@@ -26,3 +26,26 @@
   - Time series rasters produce an additional challenge
   - Band rasters as well.
 
+
+# FOSSDEM presentation:
+
+Python tiling takes 3 minutes to complete.
+
+Talk about why we need to use accumulo while ingest is taking place.
+
+Have the viewer running. Show that it wasn't there, then show that it is there.
+View the data in the viewer.
+
+Open up a shell, start doing calculations. Save off data. Show in the viewer.
+
+
+Brain dump for another talk:
+                                    Minimizing Shuffling.
+                                    Maximizing Distribution.
+                                    Minimize Query cost.
+
+                                    How z curve fits those roles. Some examples. Some graphics.
+                                    What it takes to index tiles with a z curve.
+                                    How GeoTrellis makes this pretty.
+
+

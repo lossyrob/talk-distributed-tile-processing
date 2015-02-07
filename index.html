@@ -4,10 +4,10 @@
 	<head>
 		<meta charset="utf-8">
 
-		<title>reveal.js - The HTML Presentation Framework</title>
+		<title>Distributed Tile Processing</title>
 
-		<meta name="description" content="A framework for easily creating beautiful presentations using HTML">
-		<meta name="author" content="Hakim El Hattab">
+		<meta name="description" content="Distributed Tile Processing with GeoTrellis and Spark: A presentation by Rob Emanuele.">
+		<meta name="author" content="Rob Emanuele">
 
 		<meta name="apple-mobile-web-app-capable" content="yes" />
 		<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -19,6 +19,12 @@
 
 		<!-- For syntax highlighting -->
 		<link rel="stylesheet" href="lib/css/zenburn.css">
+
+                <style media="screen" type="text/css">
+                  .reveal li {
+                    margin: 5px 0 5px 0;
+                  }
+                </style>
 
 		<!-- If the query includes 'print-pdf', include the PDF print sheet -->
 		<script>
@@ -52,483 +58,354 @@
 				</section>
 
                                 <section>
-				  <h1><strong>The Challenge</strong></h1>
-                                  <br>
-				  <h3>
-                                    How do we work with <strong>very</strong> large raster data?
-				  </h3>
-
-				  <aside class="notes">
-                                    
-				  </aside>
+                                  <section>
+				    <h1><strong>The Challenge</strong></h1>
+                                    <br>
+				    <h3>
+                                      How do we work with <strong>very</strong> large raster data?
+				    </h3>
+                                  </section>
+                                  <section>
+				    <h1><strong>Specifically...</strong></h1>
+                                    <br>
+				    <h3>
+                                      How do we work with the <br><strong>NASA NEX Down-sampled Climate Projections (NEX-DCP30)</strong><br> open data set?
+				    </h3>
+                                  </section>
                                 </section>
-
 
 				<section>
                                   <section>
-					<h1><strong>The Data</strong></h1>
-					<aside class="notes">
-                                          
-					</aside>
-                                  </section>
-
-                                  <section>
-					<h2>National Land Cover Dataset</h2>
-                                        <img src="http://www.mrlc.gov/images/NLCD06_conus_lg.gif">
-
-					<aside class="notes">
-                                          
-					</aside>
-                                  </section>
-
-                                  <section>
-					<h2>National Land Cover Dataset</h2>
-                                        <ul>
-                                          <li>Covers entire conterminous US at 30 meter resolution</li>
-                                          <li>Derived from Landsat data (satellite remote sensing data archived by the USGS).</li>
-                                          <li>Classifies land into 20 categories, such as "Developed High Intensity" or "Evergreen Forest"</li>
-                                        </ul>
-					<aside class="notes">
-                                          
-					</aside>
-                                  </section>
-
-                                  <section>
-					<h2>National Land Cover Dataset</h2>
-                                        <ul>
-                                          <li>161,190 columns by 104,424 rows</li>
-                                          <li>Uncompressed is approximately <strong>134 GB</strong></li>
-                                        </ul>
-					<aside class="notes">
-                                          
-					</aside>
+					<h2><strong>What is NEX Climate Projection data?</strong></h2>
                                   </section>
 
                                   <section>
 					<h2>Global Circulation Models</h2>
 					<p>
-                                          Model output data for predicting world temperature and precipitation out to 2099.
+                                          Models for predicting world temperature and precipitation.
 					</p>
-                                        <img src="http://www.aip.org/history/climate/images/IPCC-projection.jpg">
-					<aside class="notes">
-                                          
-					</aside>
+                                        <img src="IPCC-projection.jpg">
                                   </section>
 
                                   <section>
-					<h2>Global Circulation Models</h2>
+					<h2>IPCC Assessment Report</h2><br>
 					<ul>
-                                          <li>The Intergovernmental Panel on Climate Change (IPCC) publishes an assessment reports that reviews and endorses the currently available climate data.</li>
-                                          <li>The most recent report, AR5, was published in 2014.</li>
-                                          <li>More than 800 authors were involved in writing the report.</li>
-                                          <li>This data is <strong>important.</strong> It takes the abstract concept of "climate change" and describes it with specific measurements.
-                                              Those measurements are predictions, and are the best guesses by the smartest minds the world has working on the problem.</li>
-					<aside class="notes">
-                                          
-					</aside>
+                                          <li>IPCC = Intergovernmental Panel on Climate Change</li>
+                                          <li>Assessment Report 5 (AR5) published in 2014.</li>
+                                          <li>More than 800 authors</li>
+                                        </ul>
                                   </section>
 
                                   <section>
-					<h2>Global Circulation Models</h2>
-					<ul>
-                                          <li>21 Models</li>
-                                          <li>4 Carbon emission scenarios</li>
-                                          <li>4 Measurements (Temperature Max, Mean, Min, and Precipitation)</li>
-                                          <li>Daily model output from 2005 to 2099 (34,310 days)</li>
-                                          <li><strong>11,528,160</strong> combinations.</li>
-                                          <p>The size of each layer depends on the resolution. For a 1000x1000 raster covering
-                                             the entire world, which is roughly 4 MB, that means the entire dataset would be
-                                            around <strong>46 Terabytes</strong>
-					  </p>
-					<aside class="notes">
-                                          
-					</aside>
+					<h2>3 Key Categories:</h2>
+                                        <ul style="margin: 0 30px 0 0">
+                                          <li>
+                                            <h3><strong>Model</strong></h3> 
+                                            <ul style="margin: -10px 0 20px 75px">
+                                              <li><strong>33</strong> different models</li>
+                                              <li>Model Ensembling</li>
+                                            </ul>
+                                          </li>
+                                          <li>
+                                            <h3><strong>Dataset</strong></h3>
+                                            <ul style="margin: -10px 0 20px 75px">
+                                              <li>Temperature MAX</li>
+                                              <li>Temperature MIN</li>
+                                              <li>Precipitation</li>
+                                            </ul>
+                                          </li>
+                                          <li>
+                                            <h3><strong>Scenario</strong></h3>
+                                            <ul style="margin: -10px 0 20px 75px">
+                                              <li>Historical</li>
+                                              <li>Future RCPs</li>
+                                            </ul>
+                                          </li>
+                                        </ul>
                                   </section>
+
+                                  <section>
+                                    <h4><strong>Representative Concentration Pathways</strong></h4>
+                                    <img src="rcp-chart.jpg"/>
+                                  </section>
+
+
+                                  <section>
+					<h2>NEX Down-sampled Data</h2>
+					<ul>
+                                          <li>
+                                            Monthly data over conterminous US
+                                            <ul>
+                                              <li>Historical from 1950 - 2006</li>
+                                              <li>4 RCP scenarios from 2006 - 2099</li> 
+                                            </ul>
+                                          </li>
+                                          <li>8190 netCDF files on S3 - <a href="https://aws.amazon.com/datasets/1571164061367186">s3://nasanex/NEX-DCP30</a></li>
+                                          <li><strong>15.3</strong> TB in compressed GeoTiff tiles.</li>
+                                          <li>RCP 8.5, max for datatype/model combo: <strong>90.92 GB</strong></li>
+                                        </ul>
+                                  </section>
+                                
 				</section>
+
+				<section>
+                                  <section>
+				    <h2><strong>Our workflow for processing NEX data</strong></h2>
+                                  </section>
+                                </section>
 
 				<section>
 				  <section>
 				    <h1><strong>The Tools</strong></h1>
 				  </section>
+
 				  <section>
-				    <img src="https://spark.apache.org/images/spark-logo.png" alt="Spark">
-                                    <ul>
-                                      <li>fast and general engine for large-scale data processing</li>
-                                      <li>does things Hadoop doesn't, like cache intermediate results in memory.</li>
-                                      <li>written in Scala!</li>
-                                    </ul>
-				  </section>
-				  <section>
-				    <img src="http://www.azavea.com/blogs/newsletter/wp-content/uploads/2013/01/2012_geotrellis_600px_white.png" alt="GeoTrellis">
+				    <img src="2012_geotrellis_600px_white.png" alt="GeoTrellis">
                                     <ul>
                                       <li>Scala library for doing all things geospatial.</li>
                                       <li>framework for doing distributed raster processing on Akka and Spark.</li>
+                                      <li>Includes local, zonal, focal, and global operations on rasters.</li>
                                       <li>Currently in incubation at</li>
                                     </ul>
-                                    <img src="https://wiki.eclipse.org/images/5/56/LocationTech_Logo_500.png">
-
+                                    <img src="LocationTech_Logo_500.png">
 				  </section>
 
 				  <section>
-				    <img src="https://accumulo.apache.org/images/accumulo-logo.png" alt="Spark">
+				    <img src="spark-logo.png" alt="Spark">
+                                    <ul>
+                                      <li>Fast and general engine for large-scale data processing</li>
+                                      <li>Does things Hadoop doesn't, like cache intermediate results in memory.</li>
+                                      <li>Written in Scala!</li>
+                                      <li>Also has bindings for Python and Java</li>
+                                    </ul>
+				  </section>
+
+				  <section>
+				    <img src="accumulo-logo.png" alt="Accumulo">
 				    <h2>Accumulo</h2>
                                     <ul>
                                       <li>Big table implementation</li>
-                                      <li>Has sorted indexing.</li>
-                                      <li>Columnar database.</li>
-                                      <li>Also used by GeoMesa, another Scala project at LocationTech.</li>
+                                      <li>Has sorted indexing</li>
+                                      <li>Columnar database</li>
+                                      <li>Also used by GeoMesa, another Scala project at LocationTech</li>
                                     </ul>
 				  </section>
 				</section>
-
-                                <section>
-				  <section>
-				    <h1>What can we do with Geotrellis and Spark?</h1>
-				  </section>
-				  <section>
-                                    <ul>
-                                      <li><h3>Work with spatial-only or time-series rasters.</h3></li>
-                                      <li><h3>Ingest raster data with an indexed tile scheme into Accumulo or HDFS.</h3></li>
-                                      <li><h3>Server tiles out of HDFS or Accumulo fast enough for TMS web services.</h3></li>
-                                      <li><h3>Perform local operations and zonal summaries on raster data.</h3></li>
-                                      <li>... & more!</li>
-                                    </ul>
-				  </section>
-                                </section>
-
-                                <section>
-                                  <h1><strong>DEMO</strong></h1>
-                                </section>
-
-                                <section>
-                                  <p>By allowing users to work with very large raster data,</p>
-                                  <h3><strong>we are liberating the data,</strong></h3>
-                                  <h3><strong>enabling new discovery,</strong></h3>
-                                  <h3><strong>and helping make important decisions, better.</strong></h3>
-                                </section>
 
 				<section>
-					<h1>THE END</h1>
-					<h3>http://geotrellis.io</h3>
+                                   <section>
+				     <h2>Strategies for working with <strong>Big</strong> Rasters</h2>
+                                   </section>
+                                   <section>
+                                     <h2>Tiles</h2>
+                                     <img src="raster_tiles.gif" title="Source: http://edndoc.esri.com/arcsde/9.0/java_api/raster/images/tiles.gif"/>
+                                   </section>
+
+                                   <section>
+                                     <h2>Tiles</h2>
+                                      <img src="spacetime_tiles.jpg" title="Source: http://www.geovista.psu.edu/publications/teamJRM/figs/Fig6b.JPG"/>
+                                   </section>
+
+                                   <section>
+                                     <h2>Indexing tiles</h2>
+                                     <img style="vertical-align:middle; margin:0 50px 0 0" src="zcurve.gif" title="Source:http://www.mathcurve.com/fractals/lebesgue/zcurve.gif"/>
+                                     <img style="vertical-align:middle" src="3dzcurve.png" title="Source: http://media.tumblr.com/tumblr_m0dlqv2Vpq1qir7tc.png"/>
+                                     
+                                   </section>
+
+                                   <section>
+                                     <p><code style="font-size:70pt">RasterRDD[K]</code></p><br><br>
+                                     <strong>K</strong> is key type, based on tile indexing.<br><br>
+                                     <ul>
+                                       <li>SpatialKey</li>
+                                       <li>TemporalKey</li>
+                                       <li>SpaceTimeKey</li>
+                                     </ul>
+
+                                   </section>
+                                   
+                                   </section>
 				</section>
 
-<!--                                 <section> -->
-<!-- 				  <section> -->
-<!-- 				    <img src="https://spark.apache.org/images/spark-logo.png" alt="Spark"> -->
-<!-- 				    <h2><strong>RDD</strong></h2> -->
-<!--                                     <h3>(Resilient Distributed Dataset)</h3> -->
-<!-- 				  </section> -->
+                                <section>
+                                  <section>
+                                    <h1>Data loading</h1>
+                                  </section>
 
-<!-- 				  <section> -->
-<!--                                     <h2>What is an RDD?</h2> -->
-<!--                                     <br> -->
-<!--                                     <h3> -->
-<!--                                       <strong>An RDD</strong> is collection of elements partitioned across the nodes of the cluster that <strong>can be operated on in parallel</strong>. -->
-<!--                                     </h3> -->
-<!-- 				  </section> -->
+                                  <section>
+				    <h2>Step 1:</h2><h3><strong>Export the netCDF data into 512x512 GeoTiff tiles.</strong></h3>
+                                    <ul>
+                                      <li>Python code using GDAL and rasterio.</li>
+                                      <li>AWS Auto scaling groups and SQS.</li>
+                                      <li>Code: <a href="https://github.com/lossyrob/nex-chunker-worker">https://github.com/lossyrob/nex-chunker-worker</a></li>
+                                    </ul>
+                                  </section>
+                                  <section>
+				    <h2>Step 2:</h2><h3><strong>Ingest the data into Accumulo using GeoTrellis-Spark.</strong></h3>
+                                    <ul>
+                                      <li>Ingest the GeoTiffs to Accumulo in parallel across a cluster.</li>
+                                      <li>Ingest consists of
+                                        <ul>
+                                          <li>reprojection</li>
+                                          <li>mosaicing to tile scheme (TMS)</li>
+                                          <li>pyramiding up zoom levels</li>
+                                          <li>Calculate index splits.</li>
+                                        </ul>
+                                      </li>
+                                    </ul>
+                                  </section>
+                                </section>
 
+                                <section>
+				  <section>
+				    <h1>Analysis of NEX data</h1>
+                                    <p>Live coding session...</p>
+				  </section>
+                                </section>
 
-<!--                                   <section> -->
-<!-- 				    <img src="http://4.bp.blogspot.com/-Mmup5Pxd5wg/Uu9A6j0fn_I/AAAAAAAABDE/g8j7NHFeGsU/s1600/p1.png" alt="RDD"> -->
+                                <section>
+				  <section>
+				    <h1>Thanks!</h1>
+                                    <p><em>Take it away Johan...</em></p>
+				  </section>
+                                </section>
 
-<!--                                   </section> -->
-<!--                                 </section> -->
-<!-- 				<section> -->
-<!--                                   <section> -->
-<!-- 					<h2>A Tale of Ingest</h2> -->
-<!--                                         <br> -->
-<!-- 					<p> -->
-<!--                                           What we call the <strong>ingest</strong> process takes raster data in an external format (e.g. NetCDF or GeoTIFF) and transform it into the internal format that geotrellis-spark uses. -->
-<!-- 					</p> -->
-<!--                                   </section> -->
-<!--                                   <section> -->
-<!--                                     <h2>Step 1: Get the native data to where we can use it.</h2> -->
-<!--                                     <br> -->
-<!--                                     <ul> -->
-<!--                                       <li> -->
-<!--                                       <strong>NLCD:</strong> We used gdal_retile.py to cut up the one large GeoTIFF into 512x512 compressed GeoTIFFS, and loaded it onto our local HDFS cluster. -->
-<!--                                       </li> -->
-<!--                                       <br> -->
-<!--                                       <li> -->
-<!--                                         <strong>GCM:</strong> Each model, data type, and carbon emission scenario is contained inside it's own NetCDF file. We place these files onto S3 into a bucket that is readable by our cluster. -->
-<!--                                       </li> -->
-<!--                                     </ul> -->
-<!--                                   </section> -->
-<!--                                   <section> -->
-<!--                                     <h2>Step 2: Read the native data into an RDD.</h2> -->
-<!--                                     <br> -->
-<!--                                     <p> -->
+                                <section>
+                                  <h1>The GeoTiff File Format</h1>
+                                  <h5><em>with</em></h5>
+                                  <h3>GeoTrellis and Scala</h3>
+                                  <p>
+                                    <small><a href="http://github.com/johanstenberg92">Johan Stenberg</a> / <a href="http://twitter.com/johanstenbergg">@johanstenbergg</a></small>
+                                  </p>
+                                </section>
 
-<!--                                     </p> -->
-<!--                                   </section> -->
-<!--                                   <section> -->
-<!--                                     <h2>Step 3: Reproject the tiles.</h2> -->
-<!--                                     <br> -->
-<!--                                     <p> -->
+                                <section>
+                                  <h1>How do you read GeoTiffs on the JVM?</h1><br>
+                                </section>
 
-<!--                                     </p> -->
-<!--                                   </section> -->
-<!--                                   <section> -->
-<!--                                     <h2>Step 4: Determine the zoom level and other Metadata.</h2> -->
-<!--                                     <br> -->
-<!--                                     <p> -->
+                                <section>
+                                  <ul>
+                                    <li><h2>GDAL, Geospatial C lib, fast!</h2></li><br>
+                                    <li><h2>GeoTools, Geospatial Java lib, speed?</h2></li>
+                                  </ul>
+                                </section>
 
-<!--                                     </p> -->
-<!--                                   </section> -->
-<!--                                   <section> -->
-<!--                                     <h2>Step 5: Retile to our tile scheme.</h2> -->
-<!--                                     <br> -->
-<!--                                     <p> -->
+                                <section>
+                                  <h2>Why yet another GeoTiff Reader?</h2><br>
+                                  <ul>
+                                    <li>GeoTools large dependency</li><br>
+                                    <li>GDAL Java bindings hard to install</li><br>
+                                    <li>Go-To raster file format at GeoTrellis</li><br>
+                                    <li>GeoTrellis is all about speed, everything optimized and benchmarked</li><br>
+                                  </ul>
+                                </section>
 
-<!--                                     </p> -->
-<!--                                   </section> -->
+                                <section>
+                                  <h2>What is the GeoTiff file format?</h2><br>
+                                  <ul>
+                                    <li>Extension to the Tiff File Format</li><br>
+                                    <li>Used for images with Geospatial Metadata</li><br>
+                                    <li>Adds a bounding box and the CRS through tags</li>
+                                  </ul>
+                                </section>
+                                <section>
+                                  <h2>Geodata?</h2><br>
+                                  <ul>
+                                    <li>Bounding Box easy to read</li><br>
+                                    <li>Coordinate Reference System horrible to read</li><br>
+                                    <li>Turn it into a proj4 string and use the proj4j lib to read</li>
+                                  </ul>
+                                </section>
 
-<!--                                   <section> -->
-<!--                                     <h2>Step 6: Save to Accumulo.</h2> -->
-<!--                                     <br> -->
-<!--                                     <p> -->
+                                <section>
+                                  <h2>Compressions</h2><br>
+                                  <ul>
+                                    <li>Huffman, CCITT3, CCITT4, Packbits</li><br>
+                                    <li>LZW</li><br>
+                                    <li>Zip</li>
+                                  </ul>
+                                </section>
 
-<!--                                     </p> -->
-<!--                                   </section> -->
+                                <section>
+                                  <h1>Benchmark Time!</h1><br>
+                                </section>
 
-<!-- 				</section> -->
+                                <section>
+                                  <h2>Benchmark Disclaimer</h2><br>
+                                  <ul>
+                                    <li>Ran on my development computer</li><br>
+                                    <li>Conducted with Caliper</li><br>
+                                    <li>Microbenchmarks, look at relative speed, not speed</li><br>
+                                    <li>GDAL is read through the Java bindings, into GeoTrellis rasters</li><br>
+                                    <li>GeoTools is also turned into GeoTrellis rasters</li>
+                                  </ul>
+                                </section>
 
-<!-- 				<section> -->
-<!--                                   <section> -->
-<!-- 					<h1>Data is loaded and ready to use.</h1> -->
-<!--                                         <h3>What now?</h3> -->
-<!--                                   </section> -->
-<!--                                   <section> -->
-<!--                                     <h1><strong>DEMO</strong></h1> -->
-<!--                                   </section> -->
-<!-- 				</section> -->
+                                <section>
+                                  <img src="large_uncompressed.png" style="width: 120%;">
+                                </section>
+                                <section>
+                                  <img src="large_uncompressed_all.png" style="width: 120%;">
+                                </section>
+                                <section>
+                                  <img src="tiled_uncompressed.png" style="width: 120%;">
+                                </section>
+                                <section>
+                                    <img src="tiled_uncompressed_all.png" style="width: 120%;">
+                                  </section>
+                                  <section>
+                                    <h4>~same for CCITT3 and CCITT4</h4>
+                                    <img src="ccitt3.png" style="width: 120%;">
+                                  </section>
+                                  <section>
+                                    <h4>~same for CCITT3 and CCITT4</h4>
+                                    <img src="ccitt3_all.png" style="width: 120%;">
+                                  </section>
+                                  <section>
+                                    <img src="packbits.png" style="width: 120%;">
+                                  </section>
+                                  <section>
+                                    <img src="packbits_all.png" style="width: 120%;">
+                                  </section>
+                                  <section>
+                                    <img src="lzw.png" style="width: 120%;">
+                                  </section>
+                                  <section>
+                                    <img src="lzw_all.png" style="width: 120%;">
+                                  </section>
+                                  <section>
+                                    <img src="zip.png" style="width: 120%;">
+                                  </section>
+                                  <section>
+                                    <img src="zip_all.png" style="width: 120%;">
+                                  </section>
 
-<!-- 				<section> -->
-<!-- 					<h2>Works in Mobile Safari</h2> -->
-<!-- 					<p> -->
-<!-- 						Try it out! You can swipe through the slides and pinch your way to the overview. -->
-<!-- 					</p> -->
-<!-- 				</section> -->
+                                  <section>
+                                    <h2>Sidenote about Speed</h2><br>
+                                    <ul>
+                                      <li>Scala slow when using functional mappings</li><br>
+                                      <li>Arrays, while loops and bit operations</li><br>
+                                      <li>Skip Big-O time complexity analyzation (O(n) - duh), use microbenchmarks</li><br>
+                                    </ul>
+                                  </section>
+                                  <section>
+                                    <h2>Future?</h2><br>
+                                    <ul>
+                                      <li>Tons of compressions, JPEG hard but needed</li><br>
+                                      <li>Keep up to date with custom tags</li><br>
+                                      <li>Add a shape file reader (GeoTools is fast!)</li>
+                                    </ul>
+                                  </section>
 
-<!-- 				<section> -->
-<!-- 					<h2>Marvelous Unordered List</h2> -->
-<!-- 					<ul> -->
-<!-- 						<li>No order here</li> -->
-<!-- 						<li>Or here</li> -->
-<!-- 						<li>Or here</li> -->
-<!-- 						<li>Or here</li> -->
-<!-- 					</ul> -->
-<!-- 				</section> -->
-
-<!-- 				<section> -->
-<!-- 					<h2>Fantastic Ordered List</h2> -->
-<!-- 					<ol> -->
-<!-- 						<li>One is smaller than...</li> -->
-<!-- 						<li>Two is smaller than...</li> -->
-<!-- 						<li>Three!</li> -->
-<!-- 					</ol> -->
-<!-- 				</section> -->
-
-<!-- 				<section data-markdown> -->
-<!-- 					<script type="text/template"> -->
-<!-- 						## Markdown support -->
-
-<!-- 						For those of you who like that sort of thing. Instructions and a bit more info available [here](https://github.com/hakimel/reveal.js#markdown). -->
-
-<!-- 						``` -->
-<!-- 						<section data-markdown> -->
-<!-- 						  ## Markdown support -->
-
-<!-- 						  For those of you who like that sort of thing. -->
-<!-- 						  Instructions and a bit more info available [here](https://github.com/hakimel/reveal.js#markdown). -->
-<!-- 						</section> -->
-<!-- 						``` -->
-<!-- 					</script> -->
-<!-- 				</section> -->
-
-<!-- 				<section id="transitions"> -->
-<!-- 					<h2>Transition Styles</h2> -->
-<!-- 					<p> -->
-<!-- 						You can select from different transitions, like: <br> -->
-<!-- 						<a href="?transition=cube#/transitions">Cube</a> - -->
-<!-- 						<a href="?transition=page#/transitions">Page</a> - -->
-<!-- 						<a href="?transition=concave#/transitions">Concave</a> - -->
-<!-- 						<a href="?transition=zoom#/transitions">Zoom</a> - -->
-<!-- 						<a href="?transition=linear#/transitions">Linear</a> - -->
-<!-- 						<a href="?transition=fade#/transitions">Fade</a> - -->
-<!-- 						<a href="?transition=none#/transitions">None</a> - -->
-<!-- 						<a href="?#/transitions">Default</a> -->
-<!-- 					</p> -->
-<!-- 				</section> -->
-
-<!-- 				<section id="themes"> -->
-<!-- 					<h2>Themes</h2> -->
-<!-- 					<p> -->
-<!-- 						Reveal.js comes with a few themes built in: <br> -->
-<!-- 						<a href="?#/themes">Default</a> - -->
-<!-- 						<a href="?theme=sky#/themes">Sky</a> - -->
-<!-- 						<a href="?theme=beige#/themes">Beige</a> - -->
-<!-- 						<a href="?theme=simple#/themes">Simple</a> - -->
-<!-- 						<a href="?theme=serif#/themes">Serif</a> - -->
-<!-- 						<a href="?theme=night#/themes">Night</a> <br> -->
-<!-- 						<a href="?theme=moon#/themes">Moon</a> - -->
-<!-- 						<a href="?theme=solarized#/themes">Solarized</a> -->
-<!-- 					</p> -->
-<!-- 					<p> -->
-<!-- 						<small> -->
-<!-- 							* Theme demos are loaded after the presentation which leads to flicker. In production you should load your theme in the <code>&lt;head&gt;</code> using a <code>&lt;link&gt;</code>. -->
-<!-- 						</small> -->
-<!-- 					</p> -->
-<!-- 				</section> -->
-
-<!-- 				<section> -->
-<!-- 					<h2>Global State</h2> -->
-<!-- 					<p> -->
-<!-- 						Set <code>data-state="something"</code> on a slide and <code>"something"</code> -->
-<!-- 						will be added as a class to the document element when the slide is open. This lets you -->
-<!-- 						apply broader style changes, like switching the background. -->
-<!-- 					</p> -->
-<!-- 				</section> -->
-
-<!-- 				<section data-state="customevent"> -->
-<!-- 					<h2>Custom Events</h2> -->
-<!-- 					<p> -->
-<!-- 						Additionally custom events can be triggered on a per slide basis by binding to the <code>data-state</code> name. -->
-<!-- 					</p> -->
-<!-- 					<pre><code data-trim contenteditable style="font-size: 18px; margin-top: 20px;"> -->
-<!-- Reveal.addEventListener( 'customevent', function() { -->
-<!-- 	console.log( '"customevent" has fired' ); -->
-<!-- } ); -->
-<!-- 					</code></pre> -->
-<!-- 				</section> -->
-
-<!-- 				<section> -->
-<!-- 					<section data-background="#007777"> -->
-<!-- 						<h2>Slide Backgrounds</h2> -->
-<!-- 						<p> -->
-<!-- 							Set <code>data-background="#007777"</code> on a slide to change the full page background to the given color. All CSS color formats are supported. -->
-<!-- 						</p> -->
-<!-- 						<a href="#" class="image navigate-down"> -->
-<!-- 							<img width="178" height="238" src="https://s3.amazonaws.com/hakim-static/reveal-js/arrow.png" alt="Down arrow"> -->
-<!-- 						</a> -->
-<!-- 					</section> -->
-<!-- 					<section data-background="https://s3.amazonaws.com/hakim-static/reveal-js/arrow.png"> -->
-<!-- 						<h2>Image Backgrounds</h2> -->
-<!-- 						<pre><code>&lt;section data-background="image.png"&gt;</code></pre> -->
-<!-- 					</section> -->
-<!-- 					<section data-background="https://s3.amazonaws.com/hakim-static/reveal-js/arrow.png" data-background-repeat="repeat" data-background-size="100px"> -->
-<!-- 						<h2>Repeated Image Backgrounds</h2> -->
-<!-- 						<pre><code style="word-wrap: break-word;">&lt;section data-background="image.png" data-background-repeat="repeat" data-background-size="100px"&gt;</code></pre> -->
-<!-- 					</section> -->
-<!-- 				</section> -->
-
-<!-- 				<section data-transition="linear" data-background="#4d7e65" data-background-transition="slide"> -->
-<!-- 					<h2>Background Transitions</h2> -->
-<!-- 					<p> -->
-<!-- 						Pass reveal.js the <code>backgroundTransition: 'slide'</code> config argument to make backgrounds slide rather than fade. -->
-<!-- 					</p> -->
-<!-- 				</section> -->
-
-<!-- 				<section data-transition="linear" data-background="#8c4738" data-background-transition="slide"> -->
-<!-- 					<h2>Background Transition Override</h2> -->
-<!-- 					<p> -->
-<!-- 						You can override background transitions per slide by using <code>data-background-transition="slide"</code>. -->
-<!-- 					</p> -->
-<!-- 				</section> -->
-
-<!-- 				<section> -->
-<!-- 					<h2>Clever Quotes</h2> -->
-<!-- 					<p> -->
-<!-- 						These guys come in two forms, inline: <q cite="http://searchservervirtualization.techtarget.com/definition/Our-Favorite-Technology-Quotations"> -->
-<!-- 						&ldquo;The nice thing about standards is that there are so many to choose from&rdquo;</q> and block: -->
-<!-- 					</p> -->
-<!-- 					<blockquote cite="http://searchservervirtualization.techtarget.com/definition/Our-Favorite-Technology-Quotations"> -->
-<!-- 						&ldquo;For years there has been a theory that millions of monkeys typing at random on millions of typewriters would -->
-<!-- 						reproduce the entire works of Shakespeare. The Internet has proven this theory to be untrue.&rdquo; -->
-<!-- 					</blockquote> -->
-<!-- 				</section> -->
-
-<!-- 				<section> -->
-<!-- 					<h2>Pretty Code</h2> -->
-<!-- 					<pre><code data-trim contenteditable> -->
-<!-- def upload(s: String): Unit = println(s"String is $s") -->
-<!-- 					</code></pre> -->
-<!-- 					<p>Courtesy of <a href="http://softwaremaniacs.org/soft/highlight/en/description/">highlight.js</a>.</p> -->
-<!-- 				</section> -->
-
-<!-- 				<section> -->
-<!-- 					<h2>Intergalactic Interconnections</h2> -->
-<!-- 					<p> -->
-<!-- 						You can link between slides internally, -->
-<!-- 						<a href="#/2/3">like this</a>. -->
-<!-- 					</p> -->
-<!-- 				</section> -->
-
-<!-- 				<section> -->
-<!-- 					<section id="fragments"> -->
-<!-- 						<h2>Fragmented Views</h2> -->
-<!-- 						<p>Hit the next arrow...</p> -->
-<!-- 						<p class="fragment">... to step through ...</p> -->
-<!-- 						<ol> -->
-<!-- 							<li class="fragment"><code>any type</code></li> -->
-<!-- 							<li class="fragment"><em>of view</em></li> -->
-<!-- 							<li class="fragment"><strong>fragments</strong></li> -->
-<!-- 						</ol> -->
-
-<!-- 						<aside class="notes"> -->
-<!-- 							This slide has fragments which are also stepped through in the notes window. -->
-<!-- 						</aside> -->
-<!-- 					</section> -->
-<!-- 					<section> -->
-<!-- 						<h2>Fragment Styles</h2> -->
-<!-- 						<p>There's a few styles of fragments, like:</p> -->
-<!-- 						<p class="fragment grow">grow</p> -->
-<!-- 						<p class="fragment shrink">shrink</p> -->
-<!-- 						<p class="fragment roll-in">roll-in</p> -->
-<!-- 						<p class="fragment fade-out">fade-out</p> -->
-<!-- 						<p class="fragment highlight-red">highlight-red</p> -->
-<!-- 						<p class="fragment highlight-green">highlight-green</p> -->
-<!-- 						<p class="fragment highlight-blue">highlight-blue</p> -->
-<!-- 						<p class="fragment current-visible">current-visible</p> -->
-<!-- 						<p class="fragment highlight-current-blue">highlight-current-blue</p> -->
-<!-- 					</section> -->
-<!-- 				</section> -->
-
-<!-- 				<section> -->
-<!-- 					<h2>Spectacular image!</h2> -->
-<!-- 					<a class="image" href="http://lab.hakim.se/meny/" target="_blank"> -->
-<!-- 						<img width="320" height="299" src="http://s3.amazonaws.com/hakim-static/portfolio/images/meny.png" alt="Meny"> -->
-<!-- 					</a> -->
-<!-- 				</section> -->
-
-<!-- 				<section> -->
-<!-- 					<h2>Export to PDF</h2> -->
-<!-- 					<p>Presentations can be <a href="https://github.com/hakimel/reveal.js#pdf-export">exported to PDF</a>, below is an example that's been uploaded to SlideShare.</p> -->
-<!-- 					<iframe id="slideshare" src="http://www.slideshare.net/slideshow/embed_code/13872948" width="455" height="356" style="margin:0;overflow:hidden;border:1px solid #CCC;border-width:1px 1px 0;margin-bottom:5px" allowfullscreen> </iframe> -->
-<!-- 					<script> -->
-<!-- 						document.getElementById('slideshare').attributeName = 'allowfullscreen'; -->
-<!-- 					</script> -->
-<!-- 				</section> -->
-
-<!-- 				<section> -->
-<!-- 					<h2>Take a Moment</h2> -->
-<!-- 					<p> -->
-<!-- 						Press b or period on your keyboard to enter the 'paused' mode. This mode is helpful when you want to take distracting slides off the screen -->
-<!-- 						during a presentation. -->
-<!-- 					</p> -->
-<!-- 				</section> -->
-
-<!-- 				<section> -->
-<!-- 					<h2>Stellar Links</h2> -->
-<!-- 					<ul> -->
-<!-- 						<li><a href="http://slid.es">Try the online editor</a></li> -->
-<!-- 						<li><a href="https://github.com/hakimel/reveal.js">Source code on GitHub</a></li> -->
-<!-- 						<li><a href="http://twitter.com/hakimel">Follow me on Twitter</a></li> -->
-<!-- 					</ul> -->
-<!-- 				</section> -->
+                                  <section>
+				    <h1>QUESTIONS?</h1>
+                                    <br>
+                                    <p>Benchmarks found at <a href="https://github.com/geotrellis/benchmark">https://github.com/geotrellis/benchmark</a></p>
+                                    <br>
+				    <h3><a href="http://geotrellis.io">http://geotrellis.io</a></h3>
+                                  </section>
 
 			</div>
-
 		</div>
 
 		<script src="lib/js/head.min.js"></script>
@@ -566,3 +443,6 @@
 
 	</body>
 </html>
+
+<!--  LocalWords:  Assement
+ -->
